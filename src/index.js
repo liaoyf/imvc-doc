@@ -67,6 +67,6 @@ program
     .command("docs")
     .description("生成文档")
     .action(args => {
-        createMD(program.projectPath)
+        createMD(program.projectPath || process.cwd())
     })
 program.parse(process.argv)
