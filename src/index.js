@@ -7,8 +7,8 @@ const chalk = require("chalk")
 const logError = msg => console.log(chalk.red(msg))
 const logSuccess = msg => console.log(chalk.green(msg))
 const logWarn = msg => console.log(chalk.yellow(msg))
-async function createFileMD(projectPath, basePath, fileName) {
-    const paths = util.findFilePath(projectPath, [fileName])
+async function createFileMD(projectPath, basePath, fileNames) {
+    const paths = util.findFilePath(projectPath, fileNames)
     let doActions = [],
         mdPaths = []
     for (let p of paths) {
@@ -26,6 +26,7 @@ async function createFileMD(projectPath, basePath, fileName) {
                     if (output) {
                         await util.writeFile(mdDir, mdName, output)
                         mdPaths.push({
+                            fileName: p.name,
                             pageName,
                             mdPath
                         })
@@ -43,14 +44,15 @@ async function createFileMD(projectPath, basePath, fileName) {
 }
 async function createMD(basePath) {
     let srcPath = path.join(basePath, "src")
-    let [baseCtrMDPaths, ctrMDPaths] = await Promise.all([
-        createFileMD(srcPath, basePath, "BaseController.js"),
-        createFileMD(srcPath, basePath, "controller.js")
+    let docConfig = require(path.join(basePath, 'doc.config.js'))
+    let [shareCtrMDPaths, ctrMDPaths] = await Promise.all([
+        createFileMD(srcPath, basePath, docConfig.shareCtrNames||["BaseController.js"]),
+        createFileMD(srcPath, basePath, docConfig.pageCtrNames||["controller.js"])
     ])
     await util.writeFile(
         basePath,
         "README.md",
-        template({ basePath, ctrMDPaths, baseCtrMDPaths })
+        template({ basePath, ctrMDPaths, shareCtrMDPaths })
     )
     logSuccess("doc finish")
 }
